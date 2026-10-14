@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Share as RNShare, ScrollView, Text, TextInput, View } from 'react-native';
-import * as Location from 'expo-location';
 import { rpc } from './api';
 import { ago, flush, getJSON, K, setJSON, Sharer } from './store';
-import { startSharing, stopSharing, TASK } from './task';
+import { reconcile, startSharing, stopSharing } from './task';
 import { Btn, C, s } from './ui';
 
 export default function Share({ onBack }: { onBack: () => void }) {
@@ -19,7 +18,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
     (async () => {
       const sh = await getJSON<Sharer>(K.sharer);
       if (sh) { setSharer(sh); setName(sh.name); }
-      setOn(await Location.hasStartedLocationUpdatesAsync(TASK));
+      setOn(await reconcile());
     })();
   }, []);
 

@@ -4,7 +4,7 @@ import { rpc } from './api';
 export type Sharer = { code: string; secret: string; name: string };
 export type Pt = { lat: number; lng: number; t: number; spd?: number; hdg?: number };
 
-export const K = { sharer: 'sharer', queue: 'queue', viewer: 'viewer', log: 'log' };
+export const K = { sharer: 'sharer', queue: 'queue', viewer: 'viewer', log: 'log', sharing: 'sharing' };
 
 // tiny on-device log, shown on the Share screen (survives crashes)
 export async function log(m: string) {

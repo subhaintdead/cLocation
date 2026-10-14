@@ -1,0 +1,71 @@
+diff --git a/node_modules/expo-location/android/src/main/java/expo/modules/location/services/LocationTaskService.kt b/node_modules/expo-location/android/src/main/java/expo/modules/location/services/LocationTaskService.kt
+index 0019485..6c09cef 100644
+--- a/node_modules/expo-location/android/src/main/java/expo/modules/location/services/LocationTaskService.kt
++++ b/node_modules/expo-location/android/src/main/java/expo/modules/location/services/LocationTaskService.kt
+@@ -14,6 +14,7 @@ import android.os.Binder
+ import android.os.Build
+ import android.os.Bundle
+ import android.os.IBinder
++import android.util.Log
+ 
+ class LocationTaskService : Service() {
+   private var mChannelId: String? = null
+@@ -32,13 +33,39 @@ class LocationTaskService : Service() {
+   }
+ 
+   @TargetApi(26)
+-  override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+-    val extras = intent.extras
++  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
++    val extras = intent?.extras
+     if (extras != null) {
+       mChannelId = extras.getString("appId") + ":" + extras.getString("taskName")
+       mKillService = extras.getBoolean("killService", false)
+     }
+-    return START_REDELIVER_INTENT
++    // clocation patch: a service started with startForegroundService() MUST call startForeground()
++    // within seconds, otherwise Android kills the app. The real notification is posted later by
++    // LocationTaskConsumer once it binds; post a minimal one right away so a stale or
++    // system-restarted service can never crash the app.
++    startForegroundFallback()
++    // Do not let the system restart us without an owner.
++    return START_NOT_STICKY
++  }
++
++  private fun startForegroundFallback() {
++    try {
++      if (!::mParentContext.isInitialized) {
++        mParentContext = applicationContext
++      }
++      val channelId = mChannelId ?: "expo-location-fallback"
++      prepareChannel(channelId)
++      val notification = Notification.Builder(this, channelId)
++        .setContentTitle(applicationInfo.loadLabel(packageManager).toString())
++        .setContentText("Location sharing")
++        .setCategory(Notification.CATEGORY_SERVICE)
++        .setSmallIcon(getDefaultNotificationIcon())
++        .build()
++      startForeground(mServiceId, notification)
++    } catch (e: Exception) {
++      Log.e("expo-location", "Could not start foreground service", e)
++      stopSelf()
++    }
+   }
+ 
+   fun setParentContext(context: Context) {
+@@ -60,8 +87,13 @@ class LocationTaskService : Service() {
+   }
+ 
+   fun startForeground(serviceOptions: Bundle) {
+-    val notification = buildServiceNotification(serviceOptions)
+-    startForeground(mServiceId, notification)
++    try {
++      val notification = buildServiceNotification(serviceOptions)
++      startForeground(mServiceId, notification)
++    } catch (e: Exception) {
++      Log.e("expo-location", "startForeground failed", e)
++      stopSelf()
++    }
+   }
+ 
+   //region private

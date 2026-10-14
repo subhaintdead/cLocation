@@ -1,7 +1,8 @@
 import { AppState } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
-import { enqueue, flush, log, Pt } from './store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { enqueue, flush, K, log, Pt } from './store';
 
 export const TASK = 'clocation-share';
 
@@ -41,6 +42,7 @@ export async function startSharing() {
   if (bg.status !== 'granted') throw new Error('Set location to "Allow all the time"');
   await waitActive();
   await log('starting service');
+  await Location.stopLocationUpdatesAsync(TASK).catch(() => {}); // clear any stale registration
   await Location.startLocationUpdatesAsync(TASK, {
     accuracy: Location.Accuracy.High,
     timeInterval: 5000,
@@ -51,11 +53,25 @@ export async function startSharing() {
       notificationColor: '#2563eb',
     },
   });
+  await AsyncStorage.setItem(K.sharing, '1');
   await log('service started');
 }
 
 export async function stopSharing() {
-  if (await Location.hasStartedLocationUpdatesAsync(TASK)) {
-    await Location.stopLocationUpdatesAsync(TASK);
+  await AsyncStorage.setItem(K.sharing, '0');
+  if (await Location.hasStartedLocationUpdatesAsync(TASK).catch(() => false)) {
+    await Location.stopLocationUpdatesAsync(TASK).catch(() => {});
   }
+}
+
+/** Call on launch. Stops a service left over from a crashed run; returns true if sharing is genuinely on. */
+export async function reconcile(): Promise<boolean> {
+  const running = await Location.hasStartedLocationUpdatesAsync(TASK).catch(() => false);
+  const wanted = (await AsyncStorage.getItem(K.sharing)) === '1';
+  if (running && !wanted) {
+    await log('stale service found: stopping');
+    await stopSharing();
+    return false;
+  }
+  return running && wanted;
 }
