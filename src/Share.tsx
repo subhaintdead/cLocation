@@ -13,6 +13,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
   const [pending, setPending] = useState(0);
   const [viewers, setViewers] = useState<{ name: string; at: number }[]>([]);
   const [err, setErr] = useState('');
+  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -26,6 +27,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
     if (!sharer) return;
     const tick = async () => {
       setPending(await flush());
+      setLogs((await getJSON<string[]>(K.log)) ?? []);
       try {
         setViewers(await rpc('get_viewers', { p_code: sharer.code, p_secret: sharer.secret }));
       } catch {}
@@ -95,6 +97,11 @@ export default function Share({ onBack }: { onBack: () => void }) {
           ))}
         </View>
       )}
+      <View style={{ marginTop: 16 }}>
+        {logs.map((l, i) => (
+          <Text key={i} style={[s.dim, { fontSize: 11 }]}>{l}</Text>
+        ))}
+      </View>
     </ScrollView>
   );
 }

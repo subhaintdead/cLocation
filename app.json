@@ -13,7 +13,12 @@
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
     },
     "plugins": [
       [
@@ -21,7 +26,8 @@
         {
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true,
-          "locationAlwaysAndWhenInUsePermission": "Location is shared while sharing is on, including with the screen off."
+          "locationAlwaysAndWhenInUsePermission": "Location is shared while sharing is on, including with the screen off.",
+          "androidForegroundServiceIcon": "./assets/notification-icon.png"
         }
       ]
     ],
@@ -30,6 +36,7 @@
         "projectId": "02df6197-8205-47fe-bb06-de7a15c7942f"
       }
     },
-    "owner": "subhaintdead"
+    "owner": "subhaintdead",
+    "icon": "./assets/icon.png"
   }
 }

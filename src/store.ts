@@ -4,7 +4,17 @@ import { rpc } from './api';
 export type Sharer = { code: string; secret: string; name: string };
 export type Pt = { lat: number; lng: number; t: number; spd?: number; hdg?: number };
 
-export const K = { sharer: 'sharer', queue: 'queue', viewer: 'viewer' };
+export const K = { sharer: 'sharer', queue: 'queue', viewer: 'viewer', log: 'log' };
+
+// tiny on-device log, shown on the Share screen (survives crashes)
+export async function log(m: string) {
+  try {
+    const l = (await AsyncStorage.getItem(K.log).then((v) => (v ? JSON.parse(v) : []))) as string[];
+    l.push(`${new Date().toLocaleTimeString()} ${m}`);
+    await AsyncStorage.setItem(K.log, JSON.stringify(l.slice(-14)));
+  } catch {}
+}
+let lastErr = '';
 
 export async function getJSON<T>(k: string): Promise<T | null> {
   const v = await AsyncStorage.getItem(k);
@@ -38,9 +48,12 @@ export const flush = () =>
         await rpc('push_points', { p_code: s.code, p_secret: s.secret, p_points: batch });
         rest = rest.slice(batch.length);
         await setJSON(K.queue, rest);
+        lastErr = '';
+        await log(`sent ${batch.length}`);
       }
-    } catch {
-      // offline: keep the rest, retry later
+    } catch (e: any) {
+      const m = String(e?.message ?? e).slice(0, 120);
+      if (m !== lastErr) { lastErr = m; await log(`send failed: ${m}`); }
     }
     return rest.length;
   });
