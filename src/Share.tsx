@@ -29,7 +29,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
       setLogs((await getJSON<string[]>(K.log)) ?? []);
       try {
         setViewers(await rpc('get_viewers', { p_code: sharer.code, p_secret: sharer.secret }));
-      } catch {}
+      } catch { }
     };
     tick();
     const id = setInterval(tick, 8000);
@@ -56,7 +56,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
   const stop = async () => {
     await stopSharing();
     setOn(false);
-    if (sharer) rpc('stop_sharing', { p_code: sharer.code, p_secret: sharer.secret }).catch(() => {});
+    if (sharer) rpc('stop_sharing', { p_code: sharer.code, p_secret: sharer.secret }).catch(() => { });
   };
 
   const newCode = async () => {
@@ -74,7 +74,7 @@ export default function Share({ onBack }: { onBack: () => void }) {
   return (
     <ScrollView>
       <Btn label="Back" color={C.card} onPress={onBack} />
-      {!sharer && <TextInput style={s.input} placeholder="Label (e.g. Van 3)" placeholderTextColor={C.dim} value={name} onChangeText={setName} maxLength={40} />}
+      {!sharer && <TextInput style={s.input} placeholder="Label (e.g. your name)" placeholderTextColor={C.dim} value={name} onChangeText={setName} maxLength={40} />}
       {sharer && (
         <>
           <Text style={s.dim}>{sharer.name}</Text>
