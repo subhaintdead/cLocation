@@ -78,7 +78,7 @@ export default function Watch({ onBack }: { onBack: () => void }) {
       <View style={s.row}>
         <Text style={s.text} onPress={() => setLive(false)}>‹ {d?.name || code}</Text>
         <Text style={{ color: fresh ? C.green : C.amber, fontSize: 16, fontWeight: '700' }}>
-          {!d ? '…' : age == null ? 'No location yet' : `Last seen ${ago(age)}`}
+          {!d ? '…' : age == null ? 'No location yet' : `Last active ${ago(age)}`}
         </Text>
       </View>
       {!!msg && <Text style={s.err}>{msg}</Text>}
